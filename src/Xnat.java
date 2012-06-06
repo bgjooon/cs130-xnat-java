@@ -13,7 +13,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.io.*;
-
+import java.util.regex.*;
 
 /** Xnat Display Window **/
 public class Xnat extends JFrame {
@@ -45,7 +45,7 @@ public class Xnat extends JFrame {
 		// Declare, initialize window variables
 		JFrame frame = new JFrame("LONI Xnat Application");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setBounds(100, 100, 600, 400);
+		frame.setBounds(100, 100, 1024, 600);
 		
 		// Display the login screen
 		displayLogin(frame);	
@@ -366,7 +366,7 @@ public class Xnat extends JFrame {
 		
 		// Create right sub-panel for projects
 		final JPanel projectsPanel = new JPanel();
-		projectsPanel.setBounds(130, 0, 450, 335);
+		projectsPanel.setBounds(130, 0, 1024, 600);
 		projectsPanel.setLayout(new BorderLayout());
 		projectsPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 		
@@ -374,7 +374,7 @@ public class Xnat extends JFrame {
 		String[] temp = loadXNATProjects();
 		
 		// Populate list with projects
-		final JList<String> list = new JList<String>(temp);
+		final JList list = new JList(temp);
         list.addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
@@ -407,7 +407,7 @@ public class Xnat extends JFrame {
 		    String cookie = "JSESSIONID=" + JSESSIONID;
 
 		    // Send data
-		    URL url = new URL("https://central.xnat.org/data/archive/projects?format=XML");
+		    URL url = new URL("https://central.xnat.org/data/archive/projects?format=json");
 		    URLConnection conn = url.openConnection();
 		    conn.setRequestProperty("Cookie", cookie);
 		    conn.setDoOutput(true);
@@ -416,8 +416,12 @@ public class Xnat extends JFrame {
 		    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 		    String line;
 		    ArrayList<String> fullOutput = new ArrayList<String>();
+		    String regex = "\"ID\":\"(\\w*)\"";
+		    Pattern pattern = Pattern.compile(regex);
 		    while ((line = rd.readLine()) != null) {
-		    	fullOutput.add(line);
+		    	Matcher matcher = pattern.matcher(line);
+		    	while (matcher.find())
+		    		fullOutput.add(matcher.group(1));
 		    }// End while
 		    rd.close();
 		    

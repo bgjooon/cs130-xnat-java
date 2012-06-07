@@ -379,7 +379,7 @@ public class Xnat extends JFrame {
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
                     String object = (String) list.getSelectedValue();
-                    JOptionPane.showMessageDialog(projectsPanel.getRootPane(), object, "List Selection", JOptionPane.PLAIN_MESSAGE);
+                    JOptionPane.showMessageDialog(projectsPanel.getRootPane(), loadXNATsubject(object), "Subjects", JOptionPane.PLAIN_MESSAGE);
                 }// End if
             }// End valueChanged
         });
@@ -416,12 +416,12 @@ public class Xnat extends JFrame {
 		    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 		    String line;
 		    ArrayList<String> fullOutput = new ArrayList<String>();
-		    String regex = "\"ID\":\"(\\w*)\"";
+		    String regex = "\"ID\":\"(\\w*)\"";	// regex to find the project ID "ID":"(\w*)"
 		    Pattern pattern = Pattern.compile(regex);
 		    while ((line = rd.readLine()) != null) {
 		    	Matcher matcher = pattern.matcher(line);
 		    	while (matcher.find())
-		    		fullOutput.add(matcher.group(1));
+		    		fullOutput.add(matcher.group(1));	// group 1 is the actual project name
 		    }// End while
 		    rd.close();
 		    
@@ -439,5 +439,39 @@ public class Xnat extends JFrame {
 			return temp;
 		}// End catch
 	}// End loadXNATProjects function
+	
+	private static String loadXNATsubject(String projectName) {
+		try {
+		    // Construct data
+		    String cookie = "JSESSIONID=" + JSESSIONID;
+
+		    // Send data
+		    URL url = new URL("https://central.xnat.org/data/archive/subjects?project="+projectName+"&format=json");
+		    URLConnection conn = url.openConnection();
+		    conn.setRequestProperty("Cookie", cookie);
+		    conn.setDoOutput(true);
+
+		    // Get the response
+		    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+		    String line;
+		    String retLine = "";
+		    new ArrayList<String>();
+		    String regex = "\"ID\":\"(\\w*)\"";	// regex to find the subject ID "ID":"(\w*)"
+		    Pattern pattern = Pattern.compile(regex);
+		    while ((line = rd.readLine()) != null) {
+		    	Matcher matcher = pattern.matcher(line);
+		    	while (matcher.find())
+		    		retLine += matcher.group(1) + '\n';	// group 1 is the actual subject name
+		    }// End while
+		    rd.close();
+			
+			return retLine;
+		}// End try 
+		
+		catch (Exception e) {
+			String temp = "Error accessing XNAT Central Database";
+			return temp;
+		}// End catch
+	}// End loadXNATsubject
 	
 }// End Xnat class
